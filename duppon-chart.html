@@ -1,12 +1,605 @@
-<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>DOKSUT | DuPont Chart</title><style>
-:root{font-family:Inter,system-ui,Arial,sans-serif;background:#081421;color:#e9f1ff}*{box-sizing:border-box}body{margin:0}header{padding:20px max(20px,calc((100vw - 1240px)/2));background:#112035;border-bottom:1px solid #2e4663;display:flex;justify-content:space-between;gap:12px}a{color:#8bcbff;text-decoration:none}main{max-width:1240px;margin:auto;padding:25px 16px}h1{margin:0 0 8px}p,.muted{color:#afc1d8}.panel{background:#14263e;border:1px solid #2c4360;border-radius:14px;padding:18px;margin:20px 0}.filters{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}label{display:block;font-size:12px;color:#b8cae1;margin-bottom:6px}select,button{width:100%;padding:11px;background:#0c1a2e;color:#fff;border:1px solid #3b5574;border-radius:8px;font:inherit}button{background:#237cf0;border:0;cursor:pointer;font-weight:650}.chart{min-width:980px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px;align-items:center;padding:18px 0}.scroll{overflow-x:auto}.node{background:#102034;border:1px solid #52677f;border-radius:9px;overflow:hidden;box-shadow:0 4px 18px #0002}.node button{display:block;width:100%;text-align:center;padding:11px;border-radius:0;color:#061322;background:var(--color);font-weight:800}.node .body{padding:12px}.line{display:flex;justify-content:space-between;gap:10px;margin:8px 0;font-size:13px}.line b{font-variant-numeric:tabular-nums}.small{font-size:12px;color:#a9bbd2}.stack{display:grid;gap:24px}.right{display:grid;gap:12px}.detail{border-top:1px solid #30465f;margin-top:12px;padding-top:12px;font-size:13px;display:none}.node.open .detail{display:block}.empty{color:#ffc589}.pill{display:inline-block;border-radius:20px;padding:5px 10px;background:#223a56;color:#bedbff;font-size:12px}@media(max-width:800px){.filters{grid-template-columns:repeat(2,1fr)}header{flex-direction:column}h1{font-size:23px}}
-</style></head><body><header><strong>⚡ DOKSUT / DuPont Chart</strong><nav><a href="dashboard.html">Dashboard</a> &nbsp;·&nbsp; <a href="update-data.html">Update Data</a></nav></header><main><h1>DuPont Chart — Distribusi</h1><p>Bandingkan dua periode: bulanan, triwulan, semester, atau tahunan. Klik kotak untuk drill-down.</p><div class="panel"><div class="filters"><div><label>Unit</label><select id="unit" disabled></select></div><div><label>Rentang</label><select id="mode"><option value="month">Bulanan</option><option value="quarter">Triwulan</option><option value="semester">Semester</option><option value="year">Tahunan</option></select></div><div><label>Periode A</label><select id="a"></select></div><div><label>Periode B</label><select id="b"></select></div><div><label>Tahun A / Tahun B</label><div style="display:flex;gap:6px"><select id="ya"></select><select id="yb"></select></div></div></div><div style="display:flex;gap:12px;align-items:center;margin-top:16px"><button id="show" style="max-width:200px">Tampilkan Chart</button><span id="status" class="muted"></span></div></div><div class="panel"><div id="coverage" class="small"></div><div class="scroll"><div id="chart" class="chart"></div></div></div><p class="muted small">Gap = A − B. Persentase tiap periode = kWh ÷ total penerimaan periode × 100; bukan penjumlahan persentase bulanan. Nilai teknis mengikuti metode estimasi DOKSUT yang tersimpan.</p></main>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script><script type="module">
-import {MONTHS,createClient,currentUser,aggregate,fmt,pct} from './doksut-core.js';
-const $=id=>document.getElementById(id),db=createClient();let unit;
-function options(){const mode=$('mode').value,items=mode==='month'?MONTHS:mode==='quarter'?['TW I','TW II','TW III','TW IV']:mode==='semester'?['Semester I','Semester II']:['Setahun'];for(const id of ['a','b']){$(id).innerHTML='';items.forEach((name,i)=>$(id).add(new Option(name,i+1)))}$('a').value=mode==='month'?'9':mode==='quarter'?'3':mode==='semester'?'2':'1';$('b').value='1'}
-function range(mode,slot){if(mode==='month')return [slot];if(mode==='quarter')return [slot*3-2,slot*3-1,slot*3];if(mode==='semester')return Array.from({length:6},(_,i)=>i+1+(slot-1)*6);return Array.from({length:12},(_,i)=>i+1)}
-function node(title,color,key,A,B,ca,cb){const va=A[key]||0,vb=B[key]||0,pa=pct(va,A.penerimaan),pb=pct(vb,B.penerimaan);return `<div class="node" style="--color:${color}"><button type="button" class="toggle">${title} ⌄</button><div class="body"><div class="line"><span>Periode A</span><b>${fmt(pa)}% &nbsp; ${fmt(va)} kWh</b></div><div class="line"><span>Periode B</span><b>${fmt(pb)}% &nbsp; ${fmt(vb)} kWh</b></div><div class="line"><span>Gap (A − B)</span><b>${fmt(pa-pb)} pp &nbsp; ${fmt(va-vb)} kWh</b></div><div class="detail">${ca}<br>${cb}<br>Persentase terhadap penerimaan masing-masing periode.</div></div></div>`}
-async function show(){try{$('status').textContent='Memuat data...';const ya=+$('ya').value,yb=+$('yb').value,mode=$('mode').value,ma=range(mode,+$('a').value),mb=range(mode,+$('b').value);const {data,error}=await db.from('doksut_periods').select('year,month,results').eq('unit_code',unit).in('year',[...new Set([ya,yb])]);if(error)throw error;const ar=(data||[]).filter(r=>r.year===ya&&ma.includes(r.month)),br=(data||[]).filter(r=>r.year===yb&&mb.includes(r.month));const A=aggregate(ar),B=aggregate(br);$('coverage').innerHTML=`<span class="pill">A: ${ar.length}/${ma.length} bulan tersedia</span> &nbsp; <span class="pill">B: ${br.length}/${mb.length} bulan tersedia</span>${ar.length<ma.length||br.length<mb.length?' <span class="empty">⚠ Periode belum lengkap. Angka hanya dari bulan tersimpan.</span>':''}`;const ca=`A: ${ar.length} bulan`,cb=`B: ${br.length} bulan`;$('chart').innerHTML=`<div>${node('SUSUT DISTRIBUSI','#ffc043','total',A,B,ca,cb)}</div><div class="stack">${node('SUSUT TEKNIS','#f3e850','teknis',A,B,ca,cb)}${node('SUSUT NONTEKNIS','#a7d576','nonteknis',A,B,ca,cb)}</div><div class="right">${node('JTM','#23bf70','jtm',A,B,ca,cb)}${node('GARDU / TRAFO','#ffd08b','trafo',A,B,ca,cb)}${node('JTR','#65c7f0','jtr',A,B,ca,cb)}${node('SR','#9aafe6','sr',A,B,ca,cb)}</div>`;document.querySelectorAll('.toggle').forEach(b=>b.onclick=()=>b.closest('.node').classList.toggle('open'));$('status').textContent='Selesai'}catch(e){$('status').textContent='Gagal: '+e.message}}
-(async()=>{try{({unit}=await currentUser(db));$('unit').add(new Option(unit,unit));for(let y=2025;y<=2035;y++)for(const id of ['ya','yb'])$(id).add(new Option(y,y));$('ya').value='2026';$('yb').value='2026';$('mode').onchange=options;$('show').onclick=show;options();await show()}catch(e){$('status').textContent=e.message}})();
-</script></body></html>
+
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DOKSUT | DuPont Chart</title>
+<style>
+:root{
+  font-family:Inter,system-ui,Arial,sans-serif;
+  color:#eaf2fc;background:#091321
+}
+*{box-sizing:border-box}
+body{margin:0}
+header{
+  padding:19px max(20px,calc((100vw - 1300px)/2));
+  background:#101d2e;border-bottom:1px solid #2c3e55;
+  display:flex;justify-content:space-between;align-items:center;gap:12px
+}
+a{color:#85ccff;text-decoration:none}
+main{max-width:1350px;margin:26px auto;padding:0 20px 50px}
+h1{margin:0 0 6px;font-size:28px}
+h2{font-size:19px}
+.muted{color:#a7b7ca}
+.panel{
+  background:#111f31;border:1px solid #2b3e56;
+  border-radius:16px;padding:22px;margin-top:20px
+}
+.filters{
+  display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px
+}
+label{display:block;font-size:12px;color:#a9c1d8;margin-bottom:6px}
+select,button{font:inherit}
+select{
+  width:100%;padding:11px;background:#091727;
+  color:white;border:1px solid #41566f;border-radius:9px
+}
+button{
+  border:0;border-radius:9px;padding:11px 17px;
+  font-weight:700;cursor:pointer;background:#1aaca5;color:#052426
+}
+button.secondary{background:#2b4058;color:white}
+button:disabled{opacity:.5;cursor:not-allowed}
+.actions{display:flex;gap:10px;align-items:end}
+.notice{
+  padding:12px 14px;background:#152c40;
+  border:1px solid #35516c;border-radius:9px;margin-top:16px
+}
+.error{color:#ffb4b9;border-color:#ad4854}
+.tree{display:flex;flex-direction:column;align-items:center;gap:0;overflow-x:auto;padding:12px 0}
+.node{
+  min-width:185px;max-width:260px;text-align:center;
+  padding:15px;border:1px solid #43617e;
+  border-radius:13px;background:#172c43;cursor:pointer;
+  transition:transform .15s,border-color .15s
+}
+.node:hover{transform:translateY(-2px);border-color:#8fd9fa}
+.node strong{display:block;font-size:13px;margin-bottom:8px}
+.node .primary{font-size:24px;font-weight:800}
+.node .comparison{font-size:12px;color:#bed0e3;margin-top:7px}
+.node .delta{font-size:12px;font-weight:700;margin-top:6px}
+.positive{color:#ff9c9c}
+.negative{color:#81e3bd}
+.neutral{color:#d0d9e5}
+.root{background:#22405b;border-color:#5b9fc6}
+.technical{background:#4d411b;border-color:#aa8e36}
+.nontechnical{background:#294b37;border-color:#5caa7b}
+.jtm{background:#173c34}
+.trafo{background:#503b28}
+.jtr{background:#1c4053}
+.sr{background:#343e63}
+.line{width:2px;height:28px;background:#66839f}
+.split{
+  height:25px;width:55%;max-width:650px;
+  border-top:2px solid #66839f;
+  border-left:2px solid #66839f;
+  border-right:2px solid #66839f
+}
+.row{display:flex;justify-content:center;gap:26px;width:100%}
+.row>.node{flex:1}
+.children{display:flex;justify-content:center;gap:12px;width:100%}
+.children .node{min-width:145px;flex:1}
+.small{font-size:12px}
+.legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:15px;color:#b8c8d9;font-size:12px}
+.legend span{display:flex;align-items:center;gap:5px}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%}
+table{width:100%;border-collapse:collapse}
+th,td{text-align:left;padding:12px;border-bottom:1px solid #30435a;font-size:13px}
+th{color:#a9c5dc}
+td.num{text-align:right;font-variant-numeric:tabular-nums}
+.detail{
+  margin-top:18px;padding:17px;background:#0b192a;
+  border:1px solid #304760;border-radius:12px
+}
+.detail h3{margin:0 0 12px}
+.detail-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:12px
+}
+.metric{padding:13px;background:#14283e;border-radius:10px}
+.metric small{display:block;color:#aac0d6;margin-bottom:6px}
+.metric b{font-size:19px}
+.empty{padding:35px;text-align:center;color:#a5b8cb}
+@media(max-width:950px){
+ .filters{grid-template-columns:repeat(3,1fr)}
+ .children{gap:7px}
+ .node{min-width:145px;padding:11px}
+ .node .primary{font-size:19px}
+}
+@media(max-width:650px){
+ .filters{grid-template-columns:1fr 1fr}
+ .panel{padding:14px}
+ .tree{align-items:stretch}
+ .row{gap:9px}
+ .node{min-width:0}
+ .children .node{min-width:110px}
+ .children{min-width:490px}
+ .split{width:65%}
+ .detail-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<header>
+<strong>⚡ DOKSUT</strong>
+<nav>
+<a href="dashboard.html">Dashboard</a> &nbsp; | &nbsp;
+<a href="update-data.html">Update Data</a>
+</nav>
+</header>
+
+<main>
+<h1>DuPont Chart</h1>
+<div class="muted">
+Analisis susut distribusi, teknis, dan nonteknis dengan perbandingan dua periode.
+</div>
+
+<section class="panel">
+<h2>Filter Analisis</h2>
+
+<div class="filters">
+<div>
+<label>Unit</label>
+<select id="unit"></select>
+</div>
+
+<div>
+<label>Jenis Periode</label>
+<select id="mode">
+<option value="month">Bulanan</option>
+<option value="quarter">Triwulan</option>
+<option value="semester">Semester</option>
+<option value="year">Tahunan</option>
+</select>
+</div>
+
+<div>
+<label>Tahun Periode 1</label>
+<select id="year1"></select>
+</div>
+
+<div>
+<label>Periode 1</label>
+<select id="period1"></select>
+</div>
+
+<div>
+<label>Tahun Periode 2</label>
+<select id="year2"></select>
+</div>
+
+<div>
+<label>Periode 2</label>
+<select id="period2"></select>
+</div>
+
+<div class="actions">
+<button id="compareBtn">Bandingkan</button>
+</div>
+</div>
+
+<div id="status" class="notice">
+Pilih dua periode untuk melihat perbandingan.
+</div>
+</section>
+
+<section class="panel">
+<h2>Struktur Susut Distribusi</h2>
+<p class="muted small">
+Angka besar menunjukkan Periode 1. Angka pembanding dan selisih ditampilkan di bawahnya.
+Klik kotak untuk melihat detail.
+</p>
+
+<div id="tree" class="tree">
+<div class="empty">Belum ada data yang ditampilkan.</div>
+</div>
+
+<div class="legend">
+<span><i class="dot" style="background:#ff9c9c"></i> Naik</span>
+<span><i class="dot" style="background:#81e3bd"></i> Turun</span>
+<span>Gap = Periode 1 − Periode 2</span>
+</div>
+</section>
+
+<section class="panel">
+<h2>Rincian Perbandingan</h2>
+<div id="tableWrap" class="empty">
+Pilih periode dan klik Bandingkan.
+</div>
+<div id="detail" class="detail" hidden></div>
+</section>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SB_URL='https://wtfzctnurmkgjutzqcvc.supabase.co';
+const SB_KEY='sb_publishable_HIlbdDLTdVmztMgYMN77lA_zsvvP2by';
+const sb=window.supabase.createClient(SB_URL,SB_KEY);
+
+const $=id=>document.getElementById(id);
+const months=[
+ 'Januari','Februari','Maret','April','Mei','Juni',
+ 'Juli','Agustus','September','Oktober','November','Desember'
+];
+const unitCodes=[
+ '14400','14410','14420','14430','14440','14450','14460'
+];
+
+const metrics=[
+ ['susut_distribusi','Susut Distribusi','root'],
+ ['susut_teknis','Susut Teknis','technical'],
+ ['susut_nonteknis','Susut Nonteknis','nontechnical'],
+ ['jtm','JTM','jtm'],
+ ['trafo','Gardu / Trafo','trafo'],
+ ['jtr','JTR','jtr'],
+ ['sr','SR','sr']
+];
+
+let report1=null;
+let report2=null;
+let currentUser=null;
+
+function fmt(n,d=2){
+ return Number(n||0).toLocaleString('id-ID',{
+  minimumFractionDigits:d,
+  maximumFractionDigits:d
+ });
+}
+
+function safe(n){
+ return Number.isFinite(Number(n))?Number(n):0;
+}
+
+function pct(value,denominator){
+ return denominator>0?value/denominator*100:0;
+}
+
+function status(text,error=false){
+ $('status').textContent=text;
+ $('status').className='notice'+(error?' error':'');
+}
+
+function options(mode){
+ if(mode==='month'){
+  return months.map((x,i)=>({value:String(i+1),label:x}));
+ }
+ if(mode==='quarter'){
+  return [1,2,3,4].map(x=>({
+   value:String(x),label:'Triwulan '+x
+  }));
+ }
+ if(mode==='semester'){
+  return [1,2].map(x=>({
+   value:String(x),label:'Semester '+x
+  }));
+ }
+ return [{value:'0',label:'Satu Tahun'}];
+}
+
+function updatePeriodOptions(){
+ const mode=$('mode').value;
+ const opts=options(mode);
+ const html=opts.map(x=>
+  `<option value="${x.value}">${x.label}</option>`
+ ).join('');
+
+ $('period1').innerHTML=html;
+ $('period2').innerHTML=html;
+ $('period1').disabled=mode==='year';
+ $('period2').disabled=mode==='year';
+
+ if(mode==='month'){
+  $('period1').value='9';
+  $('period2').value='8';
+ }else if(mode==='quarter'){
+  $('period1').value='3';
+  $('period2').value='2';
+ }else if(mode==='semester'){
+  $('period1').value='2';
+  $('period2').value='1';
+ }
+}
+
+function init(){
+ $('unit').innerHTML=unitCodes.map(x=>
+  `<option value="${x}">${x}</option>`
+ ).join('');
+
+ const year=new Date().getFullYear();
+ const years=Array.from({length:11},(_,i)=>year-5+i);
+
+ for(const id of ['year1','year2']){
+  $(id).innerHTML=years.map(x=>
+   `<option value="${x}">${x}</option>`
+  ).join('');
+  $(id).value='2026';
+ }
+
+ updatePeriodOptions();
+}
+
+function rangeMonths(mode,period){
+ if(mode==='month')return [period];
+ if(mode==='quarter'){
+  const start=(period-1)*3+1;
+  return [start,start+1,start+2];
+ }
+ if(mode==='semester'){
+  const start=(period-1)*6+1;
+  return Array.from({length:6},(_,i)=>start+i);
+ }
+ return Array.from({length:12},(_,i)=>i+1);
+}
+
+function periodLabel(mode,year,period){
+ if(mode==='month')return months[period-1]+' '+year;
+ if(mode==='quarter')return 'TW '+period+' '+year;
+ if(mode==='semester')return 'Semester '+period+' '+year;
+ return 'Tahun '+year;
+}
+
+async function fetchReport(year,period){
+ const mode=$('mode').value;
+ const requested=rangeMonths(mode,period);
+
+ const {data,error}=await sb.from('doksut_periods')
+ .select('month,results')
+ .eq('unit_code',$('unit').value)
+ .eq('year',year)
+ .in('month',requested)
+ .order('month');
+
+ if(error)throw error;
+
+ const available=new Set((data||[]).map(x=>x.month));
+ const missing=requested.filter(m=>!available.has(m));
+
+ if(missing.length){
+  throw new Error(
+   'Data '+missing.map(m=>months[m-1]).join(', ')+
+   ' '+year+' belum diupload. Periode belum lengkap.'
+  );
+ }
+
+ const sum={penerimaan:0};
+
+ for(const [key] of metrics)sum[key]=0;
+
+ for(const record of data){
+  const r=record.results||{};
+  sum.penerimaan+=safe(r.penerimaan);
+  for(const [key] of metrics){
+   sum[key]+=safe(r[key]);
+  }
+ }
+
+ sum.persen_distribusi=pct(
+  sum.susut_distribusi,sum.penerimaan
+ );
+ sum.persen_teknis=pct(
+  sum.susut_teknis,sum.penerimaan
+ );
+ sum.persen_nonteknis=pct(
+  sum.susut_nonteknis,sum.penerimaan
+ );
+
+ return {
+  ...sum,
+  months:requested,
+  label:periodLabel(mode,year,period)
+ };
+}
+
+function metricPct(report,key){
+ return pct(report[key],report.penerimaan);
+}
+
+function gapClass(value){
+ if(Math.abs(value)<0.0000001)return 'neutral';
+ return value>0?'positive':'negative';
+}
+
+function makeNode(key,title,css){
+ const a=report1[key];
+ const b=report2[key];
+ const ap=metricPct(report1,key);
+ const bp=metricPct(report2,key);
+ const delta=ap-bp;
+ const kwhDelta=a-b;
+
+ return `
+ <div class="node ${css}" data-key="${key}"
+      title="Klik untuk melihat detail ${title}">
+  <strong>${title}</strong>
+  <div class="primary">${fmt(ap)}%</div>
+  <div class="comparison">
+   ${report1.label}: ${fmt(a)} kWh
+  </div>
+  <div class="comparison">
+   ${report2.label}: ${fmt(bp)}%
+   (${fmt(b)} kWh)
+  </div>
+  <div class="delta ${gapClass(delta)}">
+   ${delta>=0?'+':''}${fmt(delta)} poin persentase
+  </div>
+  <div class="delta ${gapClass(kwhDelta)}">
+   ${kwhDelta>=0?'+':''}${fmt(kwhDelta)} kWh
+  </div>
+ </div>`;
+}
+
+function renderTree(){
+ $('tree').innerHTML=`
+ ${makeNode('susut_distribusi','SUSUT DISTRIBUSI','root')}
+ <div class="line"></div>
+ <div class="split"></div>
+ <div class="row">
+  ${makeNode('susut_teknis','SUSUT TEKNIS','technical')}
+  ${makeNode('susut_nonteknis','SUSUT NONTEKNIS','nontechnical')}
+ </div>
+ <div class="line"></div>
+ <div class="children">
+  ${makeNode('jtm','JTM','jtm')}
+  ${makeNode('trafo','GARDU / TRAFO','trafo')}
+  ${makeNode('jtr','JTR','jtr')}
+  ${makeNode('sr','SR','sr')}
+ </div>
+ `;
+
+ $('tree').querySelectorAll('.node').forEach(node=>{
+  node.addEventListener('click',()=>{
+   showDetail(node.dataset.key);
+  });
+ });
+}
+
+function renderTable(){
+ const rows=[
+  ['penerimaan','Penerimaan'],
+  ...metrics.map(([key,name])=>[key,name])
+ ];
+
+ $('tableWrap').className='';
+ $('tableWrap').innerHTML=`
+ <div style="overflow-x:auto">
+ <table>
+  <thead>
+   <tr>
+    <th>Indikator</th>
+    <th>${report1.label}</th>
+    <th>${report2.label}</th>
+    <th>Gap kWh</th>
+    <th>Gap Persentase</th>
+   </tr>
+  </thead>
+  <tbody>
+   ${rows.map(([key,name])=>{
+    const a=report1[key],b=report2[key];
+    const gap=a-b;
+    const gp=metricPct(report1,key)-metricPct(report2,key);
+    return `<tr>
+     <td>${name}</td>
+     <td class="num">${fmt(a)}</td>
+     <td class="num">${fmt(b)}</td>
+     <td class="num ${gapClass(gap)}">
+      ${gap>=0?'+':''}${fmt(gap)}
+     </td>
+     <td class="num ${gapClass(gp)}">
+      ${key==='penerimaan'?'—':
+       (gp>=0?'+':'')+fmt(gp)+' pp'}
+     </td>
+    </tr>`;
+   }).join('')}
+  </tbody>
+ </table>
+ </div>`;
+}
+
+function showDetail(key){
+ const item=metrics.find(x=>x[0]===key);
+ if(!item)return;
+
+ const a=report1[key];
+ const b=report2[key];
+ const gap=a-b;
+ const pa=metricPct(report1,key);
+ const pb=metricPct(report2,key);
+
+ $('detail').hidden=false;
+ $('detail').innerHTML=`
+  <h3>Detail ${item[1]}</h3>
+  <div class="detail-grid">
+   <div class="metric">
+    <small>${report1.label}</small>
+    <b>${fmt(a)} kWh</b>
+    <p>${fmt(pa)}% dari penerimaan</p>
+   </div>
+   <div class="metric">
+    <small>${report2.label}</small>
+    <b>${fmt(b)} kWh</b>
+    <p>${fmt(pb)}% dari penerimaan</p>
+   </div>
+   <div class="metric">
+    <small>Perubahan</small>
+    <b class="${gapClass(gap)}">
+     ${gap>=0?'+':''}${fmt(gap)} kWh
+    </b>
+    <p>${fmt(pa-pb)} poin persentase</p>
+   </div>
+  </div>
+  <p class="muted small">
+   Persentase dihitung dari kWh komponen dibagi penerimaan
+   pada masing-masing periode.
+  </p>
+ `;
+ $('detail').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+async function compare(){
+ $('compareBtn').disabled=true;
+ status('Mengambil data dari Supabase...');
+
+ try{
+  const year1=Number($('year1').value);
+  const year2=Number($('year2').value);
+  const period1=Number($('period1').value);
+  const period2=Number($('period2').value);
+
+  const [a,b]=await Promise.all([
+   fetchReport(year1,period1),
+   fetchReport(year2,period2)
+  ]);
+
+  report1=a;
+  report2=b;
+
+  renderTree();
+  renderTable();
+  $('detail').hidden=true;
+
+  status(
+   'Menampilkan '+a.label+' dibandingkan '+b.label+
+   ' — Unit '+$('unit').value
+  );
+ }catch(e){
+  report1=null;
+  report2=null;
+  $('tree').innerHTML='<div class="empty">Data belum tersedia.</div>';
+  $('tableWrap').className='empty';
+  $('tableWrap').textContent='Tidak ada hasil untuk ditampilkan.';
+  $('detail').hidden=true;
+  status(e.message,true);
+ }finally{
+  $('compareBtn').disabled=false;
+ }
+}
+
+async function checkAuth(){
+ const {data,error}=await sb.auth.getUser();
+
+ if(error||!data.user){
+  location.href='index.html';
+  return;
+ }
+
+ currentUser=data.user;
+ const code=(data.user.email||'').split('@')[0];
+
+ if(!unitCodes.includes(code)){
+  status('Akun tidak memiliki akses unit DOKSUT.',true);
+  $('compareBtn').disabled=true;
+  return;
+ }
+
+ $('unit').value=code;
+ $('unit').disabled=true;
+}
+
+$('mode').addEventListener('change',updatePeriodOptions);
+$('compareBtn').addEventListener('click',compare);
+
+init();
+checkAuth();
+</script>
+</body>
+</html>
