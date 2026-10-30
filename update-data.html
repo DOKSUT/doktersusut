@@ -1,396 +1,61 @@
+<!DOCTYPE html>
+<html lang="id"><head><meta charset="utf-8"/><meta content="width=device-width,initial-scale=1" name="viewport"/><title>DOKSUT | Update Data</title><style>
+:root{font-family:Inter,system-ui,Arial,sans-serif;color:#e9eff8;background:#091321}*{box-sizing:border-box}body{margin:0}header{padding:20px max(20px,calc((100vw - 1180px)/2));border-bottom:1px solid #28364b;background:#101d2e;display:flex;align-items:center;justify-content:space-between;gap:12px}a{color:#82caff;text-decoration:none}main{max-width:1180px;margin:28px auto;padding:0 18px}h1{margin:0 0 7px;font-size:27px}p,.muted{color:#aabbd1}.panel{background:#132238;border:1px solid #2c4059;border-radius:15px;padding:23px;margin:20px 0}label{font-size:13px;color:#c7d8ed;display:block;margin-bottom:6px}select,input,button{font:inherit;border-radius:9px;padding:11px 12px}select,input{width:100%;background:#0b1729;border:1px solid #3a506b;color:#fff}input[type=file]{padding:14px}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:15px}.params{display:grid;grid-template-columns:repeat(3,1fr);gap:15px}.buttons{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}button{border:0;background:#2d85ff;color:white;cursor:pointer;font-weight:650}button.secondary{background:#304359}button:disabled{opacity:.5;cursor:not-allowed}.stat{padding:16px;background:#0c1a2d;border-radius:10px}.stat small{color:#9db0c9;display:block}.stat strong{font-size:21px}.warn{background:#423018;border:1px solid #805d2e;color:#ffe0a1;padding:13px;border-radius:10px}.ok{color:#7be3b1}.bad{color:#ff9f9f}#status{white-space:pre-wrap}table{width:100%;border-collapse:collapse}td,th{padding:10px;border-bottom:1px solid #32445b;text-align:left}td:last-child{text-align:right}@media(max-width:750px){.grid,.params{grid-template-columns:1fr}header{flex-direction:column;align-items:flex-start}}
+</style><style>
+:root{font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;color:#eef7fc;background:#07141e}*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(ellipse 70% 45% at 78% 0%,#103f56 0%,transparent 70%),#07141e}button,a{font:inherit}button{cursor:pointer}.app{display:grid;grid-template-columns:260px minmax(0,1fr);min-height:100vh}.sidebar{background:#0b1e2b;border-right:1px solid #214052;padding:28px 19px;display:flex;flex-direction:column;gap:30px}.brand{display:flex;align-items:center;gap:12px;padding:5px 9px}.brand-icon{width:46px;height:46px;display:grid;place-items:center;background:linear-gradient(140deg,#0da5cc,#13617e);border-radius:14px;font-size:24px;box-shadow:0 8px 24px #00b9eb25}.brand b{display:block;font-size:23px;letter-spacing:1px}.brand small{color:#91b3c5;font-size:10px;letter-spacing:.9px}.nav-label{color:#7292a5;text-transform:uppercase;font-size:10px;font-weight:800;letter-spacing:1.8px;padding:0 14px;margin:0 0 10px}.nav{display:grid;gap:7px}.nav a{display:flex;align-items:center;gap:12px;text-decoration:none;color:#a9c4d2;padding:13px 14px;border-radius:12px;font-size:13px;font-weight:650;transition:.2s}.nav a:hover,.nav a.active{background:#153e51;color:#e7fbff}.nav a.active{box-shadow:inset 3px 0 #27c5e9}.nav svg{width:18px;height:18px}.sidebar-bottom{margin-top:auto;padding:16px 13px;border:1px solid #294657;border-radius:15px;background:#102937}.sidebar-bottom small{display:block;color:#7e9eb1;font-size:11px}.sidebar-bottom strong{display:block;margin:5px 0 12px;font-size:13px;overflow-wrap:anywhere}.logout{width:100%;border:1px solid #385b6d;background:#173648;color:#d5eaf5;padding:10px;border-radius:10px;font-weight:700}.logout:hover{background:#254b60}.main{padding:31px clamp(20px,4vw,62px) 36px;min-width:0}.top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:38px}.crumb{font-size:12px;color:#8caaba}.top-right{display:flex;gap:10px;align-items:center}.tag{border:1px solid #315669;border-radius:100px;padding:9px 13px;color:#a9d6e5;font-size:11px;font-weight:750;letter-spacing:.6px}.avatar{width:36px;height:36px;display:grid;place-items:center;border-radius:50%;background:#195a72;color:#b8f1ff}.hero{position:relative;overflow:hidden;padding:clamp(25px,4vw,48px);border:1px solid #27586b;border-radius:24px;background:linear-gradient(115deg,#143f52,#0d2b3c 70%,#0c2637);min-height:266px;display:flex;align-items:center;box-shadow:0 20px 60px #0002}.hero:after{content:"";position:absolute;width:370px;height:370px;right:-95px;top:-100px;border:1px solid #37b8db32;border-radius:50%;box-shadow:0 0 0 45px #35b7d50b,0 0 0 95px #35b7d508;pointer-events:none}.hero-content{position:relative;z-index:1;max-width:700px}.eyebrow{font-size:11px;letter-spacing:2.3px;font-weight:800;color:#68d9f4;text-transform:uppercase}.hero h1{font-size:clamp(29px,4vw,47px);line-height:1.12;letter-spacing:-1.5px;margin:13px 0 14px}.hero h1 span{color:#57d6f1}.hero p{font-size:14px;color:#b4d0dc;line-height:1.8;max-width:590px;margin:0}.hero-symbol{position:absolute;right:10%;top:50%;transform:translateY(-50%);width:140px;height:140px;color:#57cce44a;stroke-width:1.1}.section-head{display:flex;justify-content:space-between;align-items:end;gap:12px;margin:33px 0 17px}.section-head h2{font-size:21px;letter-spacing:-.5px;margin:0 0 6px}.section-head p{font-size:12px;color:#8eafc0;margin:0}.section-head .count{font-size:11px;color:#83cce0}.cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:17px}.card{position:relative;overflow:hidden;background:#102938;border:1px solid #244758;border-radius:19px;padding:25px;min-height:211px;display:flex;flex-direction:column;transition:transform .2s,border-color .2s,background .2s}.card:hover{transform:translateY(-3px);border-color:#2f9ab8;background:#133246}.card-top{display:flex;align-items:start;justify-content:space-between}.card-icon{display:grid;place-items:center;width:47px;height:47px;border-radius:13px;background:#174c61;color:#6bdcf4}.card-icon svg{width:23px;height:23px}.number{color:#42697b;font-size:12px;font-weight:800;letter-spacing:1px}.card h3{margin:22px 0 7px;font-size:19px;letter-spacing:-.4px}.card p{font-size:12px;line-height:1.7;color:#9dbac9;margin:0;max-width:440px}.card-foot{display:flex;justify-content:space-between;align-items:center;margin-top:auto;padding-top:20px}.pill{font-size:10px;border:1px solid #2b6474;color:#8edbec;padding:6px 9px;border-radius:100px}.go{display:grid;place-items:center;width:32px;height:32px;border-radius:50%;background:#1d5267;color:#b7effc;border:0}.go svg{width:17px;height:17px}.card a.cover{position:absolute;inset:0;z-index:1}.card a.cover:focus-visible{outline:3px solid #5fe1ff;outline-offset:-4px;border-radius:19px}.workflow{margin-top:24px;background:#0e2431;border:1px solid #1e3d4c;border-radius:16px;padding:19px 23px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}.workflow b{font-size:12px;color:#c9e5ee}.steps{display:flex;align-items:center;gap:9px;flex-wrap:wrap;color:#89b2c3;font-size:11px}.steps span{padding:7px 10px;background:#153b4b;border-radius:8px}.steps em{font-style:normal;color:#4c8399}footer{font-size:11px;color:#62899d;margin-top:30px;display:flex;justify-content:space-between;gap:12px}.modal{position:fixed;inset:0;background:#000a;display:none;align-items:center;justify-content:center;padding:20px;z-index:9}.modal.show{display:flex}.dialog{max-width:390px;width:100%;padding:27px;background:#123044;border:1px solid #37647a;border-radius:18px;box-shadow:0 20px 80px #0008}.dialog h3{margin:0 0 9px}.dialog p{color:#acc8d7;line-height:1.7;font-size:13px}.dialog button{background:#29b8db;color:#06222e;border:0;border-radius:9px;padding:10px 18px;font-weight:800}@media(max-width:850px){.app{grid-template-columns:1fr}.sidebar{padding:15px 18px;gap:13px}.brand{padding:0}.nav-label,.sidebar-bottom{display:none}.nav{display:flex;overflow-x:auto;gap:5px}.nav a{white-space:nowrap;padding:11px}.main{padding:24px 18px}.top{margin-bottom:22px}.hero-symbol{right:-25px;opacity:.35}}@media(max-width:580px){.cards{grid-template-columns:1fr}.hero{min-height:240px}.tag{display:none}.section-head{margin-top:25px}.workflow{padding:17px}footer{flex-direction:column}}
 
-<!doctype html>
-<html lang="id">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>DOKSUT | Update Data</title>
-<style>
-:root{font-family:Inter,system-ui,Arial,sans-serif;color:#e9eff8;background:#091321}
-*{box-sizing:border-box}
-body{margin:0}
-header{padding:20px max(20px,calc((100vw - 1180px)/2));border-bottom:1px solid #28364b;background:#101d2e;display:flex;align-items:center;justify-content:space-between;gap:12px}
-a{color:#82caff;text-decoration:none}
-main{max-width:1180px;margin:28px auto;padding:0 20px 50px}
-h1{margin:0 0 6px;font-size:28px}
-h2{font-size:18px;margin:0 0 16px}
-.muted{color:#9fb0c5}
-.panel{background:#111f31;border:1px solid #2b3e56;border-radius:16px;padding:22px;margin-top:20px}
-.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
-.grid.four{grid-template-columns:repeat(4,1fr)}
-label{display:block;font-size:13px;color:#b9c8d8;margin-bottom:6px}
-input,select,button{font:inherit}
-input,select{width:100%;background:#0a1728;color:#f1f6ff;border:1px solid #40546e;border-radius:9px;padding:11px}
-input[type=file]{padding:10px}
-button{border:0;border-radius:9px;background:#19a6a0;color:#061a1e;padding:12px 18px;font-weight:700;cursor:pointer}
-button:disabled{opacity:.5;cursor:not-allowed}
-button.secondary{background:#2a3c53;color:#fff}
-.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}
-.stat{background:#0b192b;border:1px solid #2a3e55;border-radius:12px;padding:16px}
-.stat b{display:block;font-size:22px;margin-top:7px}
-.stat small{color:#aabbd0}
-.notice{padding:12px 15px;border-radius:9px;background:#152c40;border:1px solid #315570;margin-top:15px}
-.success{border-color:#2a9675;color:#aaf0d2}
-.error{border-color:#b94e58;color:#ffc1c5}
-table{width:100%;border-collapse:collapse}
-td,th{border-bottom:1px solid #2a3c52;padding:11px;text-align:left;font-size:13px}
-th{color:#a9c5db}
-.hidden{display:none}
-@media(max-width:750px){.grid,.grid.four{grid-template-columns:1fr 1fr}header{padding:16px}main{margin-top:20px}}
-@media(max-width:480px){.grid,.grid.four{grid-template-columns:1fr}}
-</style>
-</head>
-<body>
-<header>
-<strong>⚡ DOKSUT</strong>
-<nav>
-<a href="dashboard.html">Dashboard</a> &nbsp; | &nbsp;
-<a href="duppon-chart.html">DuPont Chart</a>
-</nav>
-</header>
 
-<main>
-<h1>Update Data</h1>
-<div class="muted">Upload data bulanan, sesuaikan parameter, lalu simpan ke database.</div>
-
-<section class="panel">
-<h2>1. Periode Data</h2>
-<div class="grid">
-<div>
-<label>Unit</label>
-<select id="unit"></select>
-</div>
-<div>
-<label>Bulan</label>
-<select id="month"></select>
-</div>
-<div>
-<label>Tahun</label>
-<select id="year"></select>
-</div>
-</div>
-<div class="actions">
-<button class="secondary" id="loadBtn">Buka Data Tersimpan</button>
-</div>
-<div id="periodStatus" class="notice">Pilih periode untuk mulai.</div>
-</section>
-
-<section class="panel">
-<h2>2. Upload Template Excel</h2>
-<p class="muted">Gunakan template DOKSUT. Satu file untuk satu unit dan satu bulan.</p>
-<input type="file" id="file" accept=".xlsx,.xls">
-<div class="actions">
-<button id="readBtn">Baca Excel</button>
-</div>
-<div id="fileStatus" class="notice">Belum ada file dibaca.</div>
-</section>
-
-<section class="panel">
-<h2>3. Parameter Manual</h2>
-<p class="muted">Parameter dapat diubah kapan saja, termasuk setelah data disimpan.</p>
-<div id="params" class="grid four"></div>
-<div class="actions">
-<button class="secondary" id="prevBtn">Ambil Parameter Bulan Sebelumnya</button>
-</div>
-</section>
-
-<section class="panel">
-<h2>4. Hasil Perhitungan</h2>
-<div id="stats" class="grid four"></div>
-<div class="actions">
-<button class="secondary" id="calcBtn">Hitung Ulang</button>
-<button id="saveBtn">Simpan / Perbarui Data</button>
-</div>
-<div id="saveStatus" class="notice">Belum ada perubahan yang disimpan.</div>
-</section>
-
-<section class="panel">
-<h2>5. Ringkasan Data Excel</h2>
-<div id="summary" class="muted">Belum ada data.</div>
-</section>
-</main>
-
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-<script src="doksut-core.js"></script>
-<script>
-const SB_URL='https://wtfzctnurmkgjutzqcvc.supabase.co';
-const SB_KEY='sb_publishable_HIlbdDLTdVmztMgYMN77lA_zsvvP2by';
-const sb=window.supabase.createClient(SB_URL,SB_KEY);
-
-const $=id=>document.getElementById(id);
-const units=['14400','14410','14420','14430','14440','14450','14460'];
-const months=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
-
-const fields=[
-['lf_tm','LF TM'],['lf_trafo','LF Trafo'],
-['lf_tr','LF TR'],['lf_sr','LF SR'],
-['pf_tm','PF TM'],['pf_trafo','PF Trafo'],
-['pf_tr','PF TR'],['pf_sr','PF SR'],
-['fk_sr','Faktor Koreksi SR'],
-['beban_penyulang','Beban Puncak Penyulang (Amp)'],
-['beban_jurusan','Beban Puncak Jurusan (Amp)'],
-['tegangan_jtr','Tegangan JTR (kV)']
-];
-
-let workbook=null;
-let sourceName='';
-let currentResults=null;
-let currentUser=null;
-let activeUnit=null;
-
-function message(id,text,type=''){
- $(id).textContent=text;
- $(id).className='notice '+type;
-}
-
-function populate(){
- $('unit').innerHTML=units.map(x=>`<option value="${x}">${x}</option>`).join('');
- $('month').innerHTML=months.map((x,i)=>`<option value="${i+1}">${x}</option>`).join('');
- const yr=new Date().getFullYear();
- $('year').innerHTML=Array.from({length:11},(_,i)=>yr-5+i)
- .map(x=>`<option value="${x}">${x}</option>`).join('');
- $('year').value='2026';
- $('month').value='9';
- $('params').innerHTML=fields.map(([key,label])=>`
- <div><label for="p_${key}">${label}</label>
- <input type="number" step="any" id="p_${key}" data-key="${key}"></div>
- `).join('');
-}
-
-function getParams(){
- const out={};
- fields.forEach(([key])=>{
-  const raw=$('p_'+key).value;
-  out[key]=raw===''?null:Number(raw);
- });
- return out;
-}
-
-function setParams(data={}){
- fields.forEach(([key])=>{
-  $('p_'+key).value=data[key]??'';
- });
-}
-
-function selected(){
- return {
-  unit_code:$('unit').value,
-  year:Number($('year').value),
-  month:Number($('month').value)
- };
-}
-
-function fmt(x,d=2){
- return Number.isFinite(Number(x))
- ?Number(x).toLocaleString('id-ID',{minimumFractionDigits:d,maximumFractionDigits:d})
- :'-';
-}
-
-function calculate(){
- if(!workbook){
-  message('saveStatus','Upload atau buka data tersimpan terlebih dahulu.','error');
-  return;
- }
- if(!window.DOKSUT){
-  message('saveStatus','File doksut-core.js belum tersedia.','error');
-  return;
- }
- try{
-  currentResults=window.DOKSUT.calculate(workbook,getParams());
-  const r=currentResults;
-  const items=[
-   ['Penerimaan',r.penerimaan,'kWh'],
-   ['Susut Distribusi',r.susut_distribusi,'kWh'],
-   ['Susut Teknis',r.susut_teknis,'kWh'],
-   ['Susut Nonteknis',r.susut_nonteknis,'kWh'],
-   ['Susut Distribusi',r.persen_distribusi,'%'],
-   ['Susut Teknis',r.persen_teknis,'%'],
-   ['Susut Nonteknis',r.persen_nonteknis,'%']
-  ];
-  $('stats').innerHTML=items.map(([name,value,unit])=>`
-   <div class="stat"><small>${name} (${unit})</small>
-   <b>${fmt(value)}</b></div>
-  `).join('');
-  message('saveStatus','Perhitungan selesai. Klik Simpan untuk menyimpan perubahan.');
- }catch(e){
-  currentResults=null;
-  message('saveStatus','Gagal menghitung: '+e.message,'error');
- }
-}
-
-function parseWorkbook(file){
- return new Promise((resolve,reject)=>{
-  const reader=new FileReader();
-  reader.onload=()=>{
-   try{
-    const wb=XLSX.read(reader.result,{type:'array',cellDates:false});
-    const sheets={};
-    wb.SheetNames.forEach(name=>{
-     sheets[name]=XLSX.utils.sheet_to_json(wb.Sheets[name],{
-      header:1,defval:null,raw:true
-     });
-    });
-    resolve(sheets);
-   }catch(e){reject(e);}
-  };
-  reader.onerror=()=>reject(new Error('Gagal membaca file.'));
-  reader.readAsArrayBuffer(file);
- });
-}
-
-function renderSummary(){
- if(!workbook){
-  $('summary').textContent='Belum ada data.';
-  return;
- }
- $('summary').innerHTML='<table><thead><tr><th>Sheet</th><th>Jumlah Baris</th></tr></thead><tbody>'+
- Object.entries(workbook).map(([name,rows])=>`
- <tr><td>${name.replace(/</g,'&lt;')}</td><td>${rows.length}</td></tr>
- `).join('')+'</tbody></table>';
-}
-
-async function checkAuth(){
- const {data,error}=await sb.auth.getUser();
- if(error||!data.user){
-  location.href='index.html';
-  return false;
- }
- currentUser=data.user;
- activeUnit=(data.user.email||'').split('@')[0];
- if(!units.includes(activeUnit)){
-  message('periodStatus','Akun tidak terdaftar sebagai unit DOKSUT.','error');
-  return false;
- }
- $('unit').value=activeUnit;
- $('unit').disabled=true;
- return true;
-}
-
-async function loadPeriod(){
- if(!currentUser)return;
- const p=selected();
- const {data,error}=await sb.from('doksut_periods')
- .select('*')
- .eq('unit_code',p.unit_code)
- .eq('year',p.year)
- .eq('month',p.month)
- .maybeSingle();
- if(error){
-  message('periodStatus','Gagal membuka data: '+error.message,'error');
-  return;
- }
- if(data){
-  workbook=data.workbook;
-  sourceName=data.source_name||'';
-  setParams(data.parameters||{});
-  renderSummary();
-  calculate();
-  message('periodStatus',`Data ${months[p.month-1]} ${p.year} sudah tersimpan. Bisa diedit.`,'success');
-  message('fileStatus','File tersimpan: '+sourceName,'success');
- }else{
-  workbook=null;
-  sourceName='';
-  currentResults=null;
-  $('stats').innerHTML='';
-  renderSummary();
-  setParams({});
-  message('periodStatus','Belum ada data untuk periode ini.');
-  message('fileStatus','Belum ada file dibaca.');
- }
-}
-
-async function previousParams(){
- const p=selected();
- let y=p.year,m=p.month-1;
- if(m===0){m=12;y--;}
- const {data,error}=await sb.from('doksut_periods')
- .select('parameters')
- .eq('unit_code',p.unit_code)
- .eq('year',y)
- .eq('month',m)
- .maybeSingle();
- if(error){
-  message('saveStatus',error.message,'error');
-  return;
- }
- if(!data){
-  message('saveStatus','Parameter bulan sebelumnya belum tersedia.','error');
-  return;
- }
- setParams(data.parameters||{});
- calculate();
- message('saveStatus','Parameter bulan sebelumnya disalin. Belum disimpan.','success');
-}
-
-async function save(){
- if(!currentUser||!workbook){
-  message('saveStatus','Belum ada data Excel yang bisa disimpan.','error');
-  return;
- }
- calculate();
- if(!currentResults)return;
- const payload={
-  ...selected(),
-  source_name:sourceName,
-  workbook,
-  parameters:getParams(),
-  results:currentResults,
-  updated_by:currentUser.id,
-  updated_at:new Date().toISOString()
- };
- $('saveBtn').disabled=true;
- const {error}=await sb.from('doksut_periods')
- .upsert(payload,{onConflict:'unit_code,year,month'});
- $('saveBtn').disabled=false;
- if(error){
-  message('saveStatus','Gagal menyimpan: '+error.message,'error');
- }else{
-  message('saveStatus','Data berhasil disimpan ke Supabase. Tetap bisa diedit.','success');
-  message('periodStatus','Periode sudah tersimpan.','success');
- }
-}
-
-$('readBtn').onclick=async()=>{
- const file=$('file').files[0];
- if(!file){
-  message('fileStatus','Pilih file Excel dahulu.','error');
-  return;
- }
- try{
-  workbook=await parseWorkbook(file);
-  sourceName=file.name;
-  currentResults=null;
-  renderSummary();
-  message('fileStatus','Excel berhasil dibaca: '+file.name,'success');
-  calculate();
- }catch(e){
-  message('fileStatus',e.message,'error');
- }
-};
-
-$('loadBtn').onclick=loadPeriod;
-$('prevBtn').onclick=previousParams;
-$('calcBtn').onclick=calculate;
-$('saveBtn').onclick=save;
-
-['unit','month','year'].forEach(id=>{
- $(id).addEventListener('change',()=>{
-  workbook=null;
-  currentResults=null;
-  sourceName='';
-  $('stats').innerHTML='';
-  $('file').value='';
-  setParams({});
-  renderSummary();
-  message('periodStatus','Periode berubah. Klik Buka Data Tersimpan.');
- });
+/* Shared DOKSUT dashboard shell */
+body{background:radial-gradient(ellipse 70% 45% at 78% 0%,#103f56 0%,transparent 70%),#07141e;color:#eef7fc}
+.app{display:grid;grid-template-columns:260px minmax(0,1fr);min-height:100vh}
+.app>.sidebar{display:flex}
+.app>.main{max-width:none;width:auto;margin:0;padding:31px clamp(20px,4vw,62px) 36px;min-width:0}
+.app .top{margin-bottom:27px}
+.app .top .crumb{font-size:12px}
+.app .panel{background:#102938;border:1px solid #244758;border-radius:19px;box-shadow:0 10px 30px #0000000c}
+.app .panel h2{color:#e6f7ff}
+.app button:not(.logout){background:#27b9d5;color:#072330}
+.app button.secondary{background:#1b4356;color:#d9f5ff;border:1px solid #315b6e}
+.app button:hover:not(:disabled){filter:brightness(1.09)}
+.app input,.app select{background:#0b1d2b;border-color:#31576b;color:#edfaff}
+.app .muted{color:#92b3c5}
+.app .notice{background:#102f40;border-color:#2c596d}
+@media(max-width:850px){.app{grid-template-columns:1fr}.app>.main{padding:24px 18px}.app>.sidebar{padding:15px 18px}}
+</style><script src="https://unpkg.com/lucide@latest"></script></head><body><div class="app"><aside class="sidebar">
+<div class="brand"><div class="brand-icon">⚡</div><div><b>DOKSUT</b><small>ENERGY LOSS DOCTOR</small></div></div>
+<div><p class="nav-label">Workspace</p><nav aria-label="Menu utama" class="nav">
+<a class="" href="dashboard.html"><i data-lucide="layout-dashboard"></i>Dashboard</a>
+<a class="" href="duppon-chart.html"><i data-lucide="git-branch"></i>DuPont Chart</a>
+<a class="active" href="update-data.html"><i data-lucide="database"></i>Update Data</a>
+<a class="" data-future="Prognosa" href="prognosa.html"><i data-lucide="chart-no-axes-combined"></i>Prognosa</a>
+<a class="" data-future="Action Plan" href="action-plan.html"><i data-lucide="clipboard-check"></i>Action Plan</a>
+</nav></div>
+<div class="sidebar-bottom"><small>AKUN AKTIF</small><strong id="accountSide">Memeriksa sesi...</strong><button class="logout" id="logoutBtn">Keluar Akun</button></div>
+</aside><main class="main feature-main"><div class="top"><span class="crumb">DOKSUT / <strong style="color:#e3f7ff">Update Data</strong></span><div class="top-right"><span class="tag">PLN INNOVATION 2027</span><div class="avatar"><i data-lucide="user-round" style="width:19px"></i></div></div></div><h1>Update Data Bulanan</h1><p>Upload Excel template, sesuaikan faktor, lalu simpan ke database unit masing-masing.</p><div class="panel"><div class="grid"><div><label>Unit</label><input disabled="" id="unit"/></div><div><label>Bulan</label><select id="month"></select></div><div><label>Tahun</label><select id="year"></select></div></div><div style="margin-top:18px"><label>Template Excel (.xlsx)</label><input accept=".xlsx,.xls" id="file" type="file"/><small class="muted">Sheet ASSET, NERACA, dan KWH EMIN wajib. Sheet DATA LF + PARAMETER didukung bila tersedia.</small></div><div class="buttons"><button class="secondary" id="load">Buka data tersimpan</button><button id="preview">Baca Excel &amp; Hitung</button></div><p aria-live="polite" id="status"></p></div><div class="panel"><h2>Parameter perhitungan <small class="muted">(selalu bisa diedit)</small></h2><p class="muted">Jika belum ada data periode ini, parameter diambil dari bulan tersimpan sebelumnya atau nilai pada Excel. LF/PF pada sheet ASSET tidak memaksa parameter manual.</p><div class="params" id="params"></div><div class="buttons"><button class="secondary" id="recalc">Hitung ulang</button><button id="save">Simpan / Perbarui di Supabase</button></div></div><div class="panel"><h2>Hasil perhitungan</h2><div class="grid" id="results"></div><div class="warn" style="margin-top:16px">Metode susut teknis saat ini merupakan estimasi DOKSUT yang dikalibrasi dari September 2026 unit 14460. Hasil bulan/unit lain harus divalidasi; bukan rumus resmi FORJOG. Susut nonteknis = susut distribusi − susut teknis.</div></div></main></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script><script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script><script type="module">
+import {MONTHS,PARAMS,createClient,currentUser,readInputs,initialParams,calculate,fmt,number} from './doksut-core.js';
+const $=id=>document.getElementById(id),db=createClient();let unit,user,workbook=null,sourceName='',existing=null,inputs=null,computed=null;
+function status(s,err=false){$('status').textContent=s;$('status').className=err?'bad':'ok'}
+function values(){return Object.fromEntries(PARAMS.map(([key])=>[key,number(document.getElementById('p_'+key).value)]))}
+function setValues(p){for(const [key,,def] of PARAMS)document.getElementById('p_'+key).value=p?.[key]??def}
+function draw(){if(!inputs)return;computed=calculate(inputs,values());const r=computed;const items=[['Penerimaan',r.penerimaan],['Susut distribusi',r.total],['Susut teknis',r.teknis],['Susut nonteknis',r.nonteknis],['JTM',r.jtm],['Gardu / Trafo',r.trafo],['JTR',r.jtr],['SR',r.sr]];$('results').innerHTML=items.map(([name,v])=>`<div class="stat"><small>${name}</small><strong>${fmt(v)} kWh</strong><small>${name==='Penerimaan'?'':fmt(100*v/r.penerimaan)}${name==='Penerimaan'?'':'%'}</small></div>`).join('')}
+function reset(){existing=null;workbook=null;sourceName='';inputs=null;computed=null;$('file').value='';$('results').innerHTML='';status('Pilih file atau buka data periode tersimpan.');setValues({})}
+async function previousParams(){const y=+$('year').value,m=+$('month').value;const {data,error}=await db.from('doksut_periods').select('parameters,year,month').eq('unit_code',unit).or(`year.lt.${y},and(year.eq.${y},month.lt.${m})`).order('year',{ascending:false}).order('month',{ascending:false}).limit(1);if(error)throw error;return data?.[0]?.parameters||{}}
+async function load(){try{const {data,error}=await db.from('doksut_periods').select('*').eq('unit_code',unit).eq('year',+$('year').value).eq('month',+$('month').value).maybeSingle();if(error)throw error;if(!data){reset();setValues(await previousParams());status('Periode belum tersimpan. Silakan upload Excel.');return}existing=data;workbook=data.workbook;sourceName=data.source_name;inputs=readInputs(workbook,+$('month').value);setValues(data.parameters);draw();status(`Data ${MONTHS[data.month-1]} ${data.year} dimuat (${sourceName}). Parameter boleh diubah dan disimpan ulang.`)}catch(e){status(e.message,true)}}
+async function parseExcel(){try{const f=$('file').files[0];if(!f)throw Error('Pilih file Excel dahulu.');if(!window.XLSX)throw Error('Pustaka Excel gagal dimuat.');const b=await f.arrayBuffer(),wb=XLSX.read(b,{type:'array',cellDates:false});const w={};for(const name of wb.SheetNames){const sheet=wb.Sheets[name],out={};for(const [addr,c] of Object.entries(sheet)){if(addr.startsWith('!'))continue;if(c.v!==undefined)out[addr]=c.v}w[name]=out}for(const needed of ['ASSET','NERACA','EMIN'])if(!Object.keys(w).some(n=>n.toUpperCase().includes(needed)))throw Error('Sheet wajib tidak ditemukan: '+needed);workbook=w;sourceName=f.name;inputs=readInputs(w,+$('month').value);if(!inputs.penerimaan)throw Error('Penerimaan bulan dipilih kosong. Cek pilihan bulan dan file.');const prev=existing?.parameters||await previousParams();setValues(initialParams(inputs,prev));draw();status(`Excel ${f.name} berhasil dibaca. Data ${MONTHS[+$('month').value-1]} siap disimpan.`)}catch(e){status(e.message,true)}}
+async function save(){try{if(!workbook||!inputs)throw Error('Upload atau buka data tersimpan dahulu.');if(!inputs.penerimaan)throw Error('Penerimaan kosong, tidak dapat menyimpan.');draw();const row={unit_code:unit,year:+$('year').value,month:+$('month').value,source_name:sourceName,workbook,parameters:values(),results:computed,updated_by:user.id,updated_at:new Date().toISOString()};const {error}=await db.from('doksut_periods').upsert(row,{onConflict:'unit_code,year,month'});if(error)throw error;status('✓ Tersimpan di Supabase. Data DuPont Chart akan memakai hasil terbaru.');await load()}catch(e){status('Gagal simpan: '+e.message,true)}}
+(async()=>{try{({unit,user}=await currentUser(db));$('unit').value=unit;MONTHS.forEach((m,i)=>$('month').add(new Option(m,i+1)));for(let y=2025;y<=2035;y++)$('year').add(new Option(y,y));$('year').value='2026';$('month').value='9';$('params').innerHTML=PARAMS.map(([key,label,def])=>`<div><label for="p_${key}">${label}</label><input id="p_${key}" type="number" step="any" value="${def}"></div>`).join('');$('month').onchange=reset;$('year').onchange=reset;$('load').onclick=load;$('preview').onclick=parseExcel;$('recalc').onclick=()=>{try{draw();status('Hasil dihitung ulang. Klik Simpan agar tersimpan ke Supabase.')}catch(e){status(e.message,true)}};$('save').onclick=save;await load()}catch(e){status(e.message,true)}})();
+</script><script>
+if(window.lucide)window.lucide.createIcons();
+const logoutButton=document.getElementById('logoutBtn');
+logoutButton?.addEventListener('click',async()=>{
+ logoutButton.disabled=true;
+ const {error}=await sb.auth.signOut();
+ if(error){alert('Gagal keluar akun: '+error.message);logoutButton.disabled=false;return;}
+ location.replace('index.html');
 });
-
-populate();
-checkAuth().then(ok=>{
- if(ok)loadPeriod();
-});
-</script>
-</body>
-</html>
+(async()=>{const {data}=await sb.auth.getUser();
+ const node=document.getElementById('accountSide');
+ if(node)node.textContent=data?.user?.email?.split('@')[0]||'Memeriksa sesi...';
+})();
+</script></body></html>
