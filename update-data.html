@@ -1,0 +1,396 @@
+
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DOKSUT | Update Data</title>
+<style>
+:root{font-family:Inter,system-ui,Arial,sans-serif;color:#e9eff8;background:#091321}
+*{box-sizing:border-box}
+body{margin:0}
+header{padding:20px max(20px,calc((100vw - 1180px)/2));border-bottom:1px solid #28364b;background:#101d2e;display:flex;align-items:center;justify-content:space-between;gap:12px}
+a{color:#82caff;text-decoration:none}
+main{max-width:1180px;margin:28px auto;padding:0 20px 50px}
+h1{margin:0 0 6px;font-size:28px}
+h2{font-size:18px;margin:0 0 16px}
+.muted{color:#9fb0c5}
+.panel{background:#111f31;border:1px solid #2b3e56;border-radius:16px;padding:22px;margin-top:20px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.grid.four{grid-template-columns:repeat(4,1fr)}
+label{display:block;font-size:13px;color:#b9c8d8;margin-bottom:6px}
+input,select,button{font:inherit}
+input,select{width:100%;background:#0a1728;color:#f1f6ff;border:1px solid #40546e;border-radius:9px;padding:11px}
+input[type=file]{padding:10px}
+button{border:0;border-radius:9px;background:#19a6a0;color:#061a1e;padding:12px 18px;font-weight:700;cursor:pointer}
+button:disabled{opacity:.5;cursor:not-allowed}
+button.secondary{background:#2a3c53;color:#fff}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}
+.stat{background:#0b192b;border:1px solid #2a3e55;border-radius:12px;padding:16px}
+.stat b{display:block;font-size:22px;margin-top:7px}
+.stat small{color:#aabbd0}
+.notice{padding:12px 15px;border-radius:9px;background:#152c40;border:1px solid #315570;margin-top:15px}
+.success{border-color:#2a9675;color:#aaf0d2}
+.error{border-color:#b94e58;color:#ffc1c5}
+table{width:100%;border-collapse:collapse}
+td,th{border-bottom:1px solid #2a3c52;padding:11px;text-align:left;font-size:13px}
+th{color:#a9c5db}
+.hidden{display:none}
+@media(max-width:750px){.grid,.grid.four{grid-template-columns:1fr 1fr}header{padding:16px}main{margin-top:20px}}
+@media(max-width:480px){.grid,.grid.four{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+<strong>⚡ DOKSUT</strong>
+<nav>
+<a href="dashboard.html">Dashboard</a> &nbsp; | &nbsp;
+<a href="duppon-chart.html">DuPont Chart</a>
+</nav>
+</header>
+
+<main>
+<h1>Update Data</h1>
+<div class="muted">Upload data bulanan, sesuaikan parameter, lalu simpan ke database.</div>
+
+<section class="panel">
+<h2>1. Periode Data</h2>
+<div class="grid">
+<div>
+<label>Unit</label>
+<select id="unit"></select>
+</div>
+<div>
+<label>Bulan</label>
+<select id="month"></select>
+</div>
+<div>
+<label>Tahun</label>
+<select id="year"></select>
+</div>
+</div>
+<div class="actions">
+<button class="secondary" id="loadBtn">Buka Data Tersimpan</button>
+</div>
+<div id="periodStatus" class="notice">Pilih periode untuk mulai.</div>
+</section>
+
+<section class="panel">
+<h2>2. Upload Template Excel</h2>
+<p class="muted">Gunakan template DOKSUT. Satu file untuk satu unit dan satu bulan.</p>
+<input type="file" id="file" accept=".xlsx,.xls">
+<div class="actions">
+<button id="readBtn">Baca Excel</button>
+</div>
+<div id="fileStatus" class="notice">Belum ada file dibaca.</div>
+</section>
+
+<section class="panel">
+<h2>3. Parameter Manual</h2>
+<p class="muted">Parameter dapat diubah kapan saja, termasuk setelah data disimpan.</p>
+<div id="params" class="grid four"></div>
+<div class="actions">
+<button class="secondary" id="prevBtn">Ambil Parameter Bulan Sebelumnya</button>
+</div>
+</section>
+
+<section class="panel">
+<h2>4. Hasil Perhitungan</h2>
+<div id="stats" class="grid four"></div>
+<div class="actions">
+<button class="secondary" id="calcBtn">Hitung Ulang</button>
+<button id="saveBtn">Simpan / Perbarui Data</button>
+</div>
+<div id="saveStatus" class="notice">Belum ada perubahan yang disimpan.</div>
+</section>
+
+<section class="panel">
+<h2>5. Ringkasan Data Excel</h2>
+<div id="summary" class="muted">Belum ada data.</div>
+</section>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="doksut-core.js"></script>
+<script>
+const SB_URL='https://wtfzctnurmkgjutzqcvc.supabase.co';
+const SB_KEY='sb_publishable_HIlbdDLTdVmztMgYMN77lA_zsvvP2by';
+const sb=window.supabase.createClient(SB_URL,SB_KEY);
+
+const $=id=>document.getElementById(id);
+const units=['14400','14410','14420','14430','14440','14450','14460'];
+const months=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+
+const fields=[
+['lf_tm','LF TM'],['lf_trafo','LF Trafo'],
+['lf_tr','LF TR'],['lf_sr','LF SR'],
+['pf_tm','PF TM'],['pf_trafo','PF Trafo'],
+['pf_tr','PF TR'],['pf_sr','PF SR'],
+['fk_sr','Faktor Koreksi SR'],
+['beban_penyulang','Beban Puncak Penyulang (Amp)'],
+['beban_jurusan','Beban Puncak Jurusan (Amp)'],
+['tegangan_jtr','Tegangan JTR (kV)']
+];
+
+let workbook=null;
+let sourceName='';
+let currentResults=null;
+let currentUser=null;
+let activeUnit=null;
+
+function message(id,text,type=''){
+ $(id).textContent=text;
+ $(id).className='notice '+type;
+}
+
+function populate(){
+ $('unit').innerHTML=units.map(x=>`<option value="${x}">${x}</option>`).join('');
+ $('month').innerHTML=months.map((x,i)=>`<option value="${i+1}">${x}</option>`).join('');
+ const yr=new Date().getFullYear();
+ $('year').innerHTML=Array.from({length:11},(_,i)=>yr-5+i)
+ .map(x=>`<option value="${x}">${x}</option>`).join('');
+ $('year').value='2026';
+ $('month').value='9';
+ $('params').innerHTML=fields.map(([key,label])=>`
+ <div><label for="p_${key}">${label}</label>
+ <input type="number" step="any" id="p_${key}" data-key="${key}"></div>
+ `).join('');
+}
+
+function getParams(){
+ const out={};
+ fields.forEach(([key])=>{
+  const raw=$('p_'+key).value;
+  out[key]=raw===''?null:Number(raw);
+ });
+ return out;
+}
+
+function setParams(data={}){
+ fields.forEach(([key])=>{
+  $('p_'+key).value=data[key]??'';
+ });
+}
+
+function selected(){
+ return {
+  unit_code:$('unit').value,
+  year:Number($('year').value),
+  month:Number($('month').value)
+ };
+}
+
+function fmt(x,d=2){
+ return Number.isFinite(Number(x))
+ ?Number(x).toLocaleString('id-ID',{minimumFractionDigits:d,maximumFractionDigits:d})
+ :'-';
+}
+
+function calculate(){
+ if(!workbook){
+  message('saveStatus','Upload atau buka data tersimpan terlebih dahulu.','error');
+  return;
+ }
+ if(!window.DOKSUT){
+  message('saveStatus','File doksut-core.js belum tersedia.','error');
+  return;
+ }
+ try{
+  currentResults=window.DOKSUT.calculate(workbook,getParams());
+  const r=currentResults;
+  const items=[
+   ['Penerimaan',r.penerimaan,'kWh'],
+   ['Susut Distribusi',r.susut_distribusi,'kWh'],
+   ['Susut Teknis',r.susut_teknis,'kWh'],
+   ['Susut Nonteknis',r.susut_nonteknis,'kWh'],
+   ['Susut Distribusi',r.persen_distribusi,'%'],
+   ['Susut Teknis',r.persen_teknis,'%'],
+   ['Susut Nonteknis',r.persen_nonteknis,'%']
+  ];
+  $('stats').innerHTML=items.map(([name,value,unit])=>`
+   <div class="stat"><small>${name} (${unit})</small>
+   <b>${fmt(value)}</b></div>
+  `).join('');
+  message('saveStatus','Perhitungan selesai. Klik Simpan untuk menyimpan perubahan.');
+ }catch(e){
+  currentResults=null;
+  message('saveStatus','Gagal menghitung: '+e.message,'error');
+ }
+}
+
+function parseWorkbook(file){
+ return new Promise((resolve,reject)=>{
+  const reader=new FileReader();
+  reader.onload=()=>{
+   try{
+    const wb=XLSX.read(reader.result,{type:'array',cellDates:false});
+    const sheets={};
+    wb.SheetNames.forEach(name=>{
+     sheets[name]=XLSX.utils.sheet_to_json(wb.Sheets[name],{
+      header:1,defval:null,raw:true
+     });
+    });
+    resolve(sheets);
+   }catch(e){reject(e);}
+  };
+  reader.onerror=()=>reject(new Error('Gagal membaca file.'));
+  reader.readAsArrayBuffer(file);
+ });
+}
+
+function renderSummary(){
+ if(!workbook){
+  $('summary').textContent='Belum ada data.';
+  return;
+ }
+ $('summary').innerHTML='<table><thead><tr><th>Sheet</th><th>Jumlah Baris</th></tr></thead><tbody>'+
+ Object.entries(workbook).map(([name,rows])=>`
+ <tr><td>${name.replace(/</g,'&lt;')}</td><td>${rows.length}</td></tr>
+ `).join('')+'</tbody></table>';
+}
+
+async function checkAuth(){
+ const {data,error}=await sb.auth.getUser();
+ if(error||!data.user){
+  location.href='index.html';
+  return false;
+ }
+ currentUser=data.user;
+ activeUnit=(data.user.email||'').split('@')[0];
+ if(!units.includes(activeUnit)){
+  message('periodStatus','Akun tidak terdaftar sebagai unit DOKSUT.','error');
+  return false;
+ }
+ $('unit').value=activeUnit;
+ $('unit').disabled=true;
+ return true;
+}
+
+async function loadPeriod(){
+ if(!currentUser)return;
+ const p=selected();
+ const {data,error}=await sb.from('doksut_periods')
+ .select('*')
+ .eq('unit_code',p.unit_code)
+ .eq('year',p.year)
+ .eq('month',p.month)
+ .maybeSingle();
+ if(error){
+  message('periodStatus','Gagal membuka data: '+error.message,'error');
+  return;
+ }
+ if(data){
+  workbook=data.workbook;
+  sourceName=data.source_name||'';
+  setParams(data.parameters||{});
+  renderSummary();
+  calculate();
+  message('periodStatus',`Data ${months[p.month-1]} ${p.year} sudah tersimpan. Bisa diedit.`,'success');
+  message('fileStatus','File tersimpan: '+sourceName,'success');
+ }else{
+  workbook=null;
+  sourceName='';
+  currentResults=null;
+  $('stats').innerHTML='';
+  renderSummary();
+  setParams({});
+  message('periodStatus','Belum ada data untuk periode ini.');
+  message('fileStatus','Belum ada file dibaca.');
+ }
+}
+
+async function previousParams(){
+ const p=selected();
+ let y=p.year,m=p.month-1;
+ if(m===0){m=12;y--;}
+ const {data,error}=await sb.from('doksut_periods')
+ .select('parameters')
+ .eq('unit_code',p.unit_code)
+ .eq('year',y)
+ .eq('month',m)
+ .maybeSingle();
+ if(error){
+  message('saveStatus',error.message,'error');
+  return;
+ }
+ if(!data){
+  message('saveStatus','Parameter bulan sebelumnya belum tersedia.','error');
+  return;
+ }
+ setParams(data.parameters||{});
+ calculate();
+ message('saveStatus','Parameter bulan sebelumnya disalin. Belum disimpan.','success');
+}
+
+async function save(){
+ if(!currentUser||!workbook){
+  message('saveStatus','Belum ada data Excel yang bisa disimpan.','error');
+  return;
+ }
+ calculate();
+ if(!currentResults)return;
+ const payload={
+  ...selected(),
+  source_name:sourceName,
+  workbook,
+  parameters:getParams(),
+  results:currentResults,
+  updated_by:currentUser.id,
+  updated_at:new Date().toISOString()
+ };
+ $('saveBtn').disabled=true;
+ const {error}=await sb.from('doksut_periods')
+ .upsert(payload,{onConflict:'unit_code,year,month'});
+ $('saveBtn').disabled=false;
+ if(error){
+  message('saveStatus','Gagal menyimpan: '+error.message,'error');
+ }else{
+  message('saveStatus','Data berhasil disimpan ke Supabase. Tetap bisa diedit.','success');
+  message('periodStatus','Periode sudah tersimpan.','success');
+ }
+}
+
+$('readBtn').onclick=async()=>{
+ const file=$('file').files[0];
+ if(!file){
+  message('fileStatus','Pilih file Excel dahulu.','error');
+  return;
+ }
+ try{
+  workbook=await parseWorkbook(file);
+  sourceName=file.name;
+  currentResults=null;
+  renderSummary();
+  message('fileStatus','Excel berhasil dibaca: '+file.name,'success');
+  calculate();
+ }catch(e){
+  message('fileStatus',e.message,'error');
+ }
+};
+
+$('loadBtn').onclick=loadPeriod;
+$('prevBtn').onclick=previousParams;
+$('calcBtn').onclick=calculate;
+$('saveBtn').onclick=save;
+
+['unit','month','year'].forEach(id=>{
+ $(id).addEventListener('change',()=>{
+  workbook=null;
+  currentResults=null;
+  sourceName='';
+  $('stats').innerHTML='';
+  $('file').value='';
+  setParams({});
+  renderSummary();
+  message('periodStatus','Periode berubah. Klik Buka Data Tersimpan.');
+ });
+});
+
+populate();
+checkAuth().then(ok=>{
+ if(ok)loadPeriod();
+});
+</script>
+</body>
+</html>
